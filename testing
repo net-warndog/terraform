@@ -1,0 +1,91 @@
+@@ -1,91 +0,0 @@
+terraform {
+  required_providers {
+    proxmox = {
+      source = "telmate/proxmox"
+      version = "3.0.2-rc04"
+      #source  = "bpg/proxmox"
+      #version = "~> 0.70.1" // allows 0.70.2, but not 0.71.0 for instance.
+                            // You could omit this to always use the latest version if you wanted.
+    }
+  }
+}
+
+provider "proxmox" {
+  pm_api_url = "https://xxxx/api2/json"
+  pm_tls_insecure = true
+  pm_user = "xxxxx@xxxx"
+  pm_password = "xxxxx"
+#  endpoint = "https://xxxxx"
+#  username = "xxxx@xxxxx"
+#  password = "xxxxx"
+#  insecure = true // necessary because of self-signed certificates
+}
+
+resource "null_resource" "download_debian_template" {
+  connection {
+    type        = "ssh"
+    host        = "xxxxx"
+    user        = "xxxxx"
+    password    = "xxxxxxx"
+    # or use private key:
+    # private_key = file("~/.ssh/id_rsa")
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "pveam update",
+      "pveam download local debian-12-standard_12.12-1_amd64.tar.zst"
+    ]
+  }
+}
+
+resource "time_sleep" "wait_5_seconds" {
+  # Wait 30 seconds after this resource is "created"
+  create_duration = "5s"
+
+  # Optional: Wait time before destruction (if needed)
+  # destroy_duration = "10s"
+}
+
+resource "proxmox_lxc" "test" {
+  target_node = "prox-1"
+  hostname    = "test"
+  ostemplate  = "local:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
+  ostype    = "debian"
+  password  = "password"
+  cores     = 1
+  memory    = 2048
+  swap      = 512
+  arch      = "amd64"
+  unprivileged = true
+  onboot      = true
+
+  rootfs {
+    storage = "local-zfs"
+    size    = "8G"
+  }
+
+  network {
+    name   = "eth0"
+    bridge = "vmbr0"
+    firewall = true
+    ip = "dhcp"
+    tag = 22
+    type = "veth"
+  }
+    # Features
+  features {
+    nesting = true
+  }
+
+  # LXC options
+  #pct_config {
+  #  "lxc.mount.entry" = "tmpfs tmp tmpfs rw,noexec,nosuid,nodev,size=512m 0 0"
+  #  "lxc.cap.drop"    = ["sys_module", "sys_rawio"]
+  #  "lxc.console.path" = "none"
+  #  "lxc.tty.max"      = "1"
+  #}
+
+  start = true
+}
