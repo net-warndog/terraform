@@ -11,22 +11,22 @@ terraform {
 }
 
 provider "proxmox" {
-  pm_api_url = "https://10.10.22.10:8006/api2/json"
+  pm_api_url = "https://xxxx0:8006/api2/json"
   pm_tls_insecure = true
   pm_user = "root@pam"
-  pm_password = "W1llyProx123!"
-#  endpoint = "https://10.10.22.10:8006"
+  pm_password = "xxxxx"
+#  endpoint = "https://xxxxx:8006"
 #  username = "root@pam"
-#  password = "W1llyProx123!"
+#  password = "xxxxx"
 #  insecure = true // necessary because of self-signed certificates
 }
 
 resource "null_resource" "download_debian_template" {
   connection {
     type        = "ssh"
-    host        = "10.10.22.10"
+    host        = "xxxxx"
     user        = "root"
-    password    = "W1llyProx123!"
+    password    = "xxxxxx!"
     # or use private key:
     # private_key = file("~/.ssh/id_rsa")
   }
